@@ -10,9 +10,7 @@ import com.uwetrottmann.tmdb2.services.SearchService;
 import okhttp3.Response;
 import retrofit2.Call;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -38,14 +36,22 @@ public class Test {
         List<String> movieNameList = loadMovie();
 
         //3，获取电影明细信息
-        for (String curMovieName : movieNameList) {
-            getMovieInfoFramTMDB(curMovieName);
-        }
-
+        batchLoadMovieInfo(movieNameList);
 
     }
 
+    private static void batchLoadMovieInfo(List<String> movieNameList) {
+        List<MovieInfo> movieInfoList = new ArrayList<>();
+        for (String curMovieName : movieNameList) {
+            MovieInfo curMovieInfo = getMovieInfoFramTMDB(curMovieName);
+            movieInfoList.add(curMovieInfo);
+        }
+
+        saveDataToFile(movieInfoList);
+    }
+
     private static void loadConfig() {
+
         InputStream in = Test.class.getClassLoader().getResourceAsStream("config.properties");
         try {
             movieProperties.load(in);
@@ -105,20 +111,35 @@ public class Test {
         return false;
     }
 
-    private static void getMovieInfoFramTMDB(String movieName) {
+    private static MovieInfo getMovieInfoFramTMDB(String movieName) {
 
         Call<MovieResultsPage> call = searchService.movie(movieName, null, "zh", "zh", true, null, null);
+        MovieResultsPage movieResults;
         try {
-            MovieResultsPage movieResults = call.execute().body();
-            if(movieResults == null || movieResults.results == null || movieResults.results.size() == 0){
-                System.out.println("很抱歉，未获取到关于【"+movieName+"】的相关电影信息");
+            movieResults = call.execute().body();
+
+            if (movieResults == null || movieResults.results == null || movieResults.results.size() == 0) {
+                System.out.println("很抱歉，未获取到关于【" + movieName + "】的相关电影信息");
+            } else {
+                System.out.println(movieName + "：信息获取成功");
             }
-            for (BaseMovie result : movieResults.results) {
-                MovieInfo curMovieInfo = new MovieInfo(movieName,result);
-                System.out.println(curMovieInfo);
-            }
+
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("获取【" + movieName + "】时出现异常", e);
+        }
+        return new MovieInfo(movieResults,movieName);
+    }
+
+    private static void saveDataToFile(List<MovieInfo> movieInfoList) {
+        try {
+            FileWriter fileWriter = new FileWriter(Test.class.getClassLoader().getResource("data.json").getPath(), false);
+            BufferedWriter bw = new BufferedWriter(fileWriter);
+            bw.write(JSON.toJSONString(movieInfoList,true));
+            bw.flush();
+            bw.close();
+            System.out.println("文件写入成功");
+        } catch (IOException e) {
+            throw new RuntimeException("电影文件写入失败", e);
         }
     }
 }

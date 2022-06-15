@@ -1,25 +1,26 @@
 package com.jd.mc.test;
 
-import com.alibaba.fastjson.JSON;
-import com.uwetrottmann.tmdb2.entities.BaseMovie;
+import com.uwetrottmann.tmdb2.entities.MovieResultsPage;
 
 /**
  * @author 田继东 on 2022/6/14 22:27
  */
 public class MovieInfo {
-    private BaseMovie baseMovie;
+    private MovieResultsPage movieResultsPage;
 
     private String name;
 
-    public MovieInfo(String name ,BaseMovie baseMovie) {
+    public MovieInfo(MovieResultsPage movieResultsPage, String name) {
+        this.movieResultsPage = movieResultsPage;
         this.name = name;
-        this.baseMovie = baseMovie;
     }
 
+    public MovieResultsPage getMovieResultsPage() {
+        return movieResultsPage;
+    }
 
-    @Override
-    public String toString() {
-        return name + ":" + JSON.toJSONString(baseMovie);
+    public void setMovieResultsPage(MovieResultsPage movieResultsPage) {
+        this.movieResultsPage = movieResultsPage;
     }
 
     public String getName() {
@@ -28,13 +29,5 @@ public class MovieInfo {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public BaseMovie getBaseMovie() {
-        return baseMovie;
-    }
-
-    public void setBaseMovie(BaseMovie baseMovie) {
-        this.baseMovie = baseMovie;
     }
 }
